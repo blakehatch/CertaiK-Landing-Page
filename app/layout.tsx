@@ -33,6 +33,9 @@ export default function RootLayout({
             <a href="https://t.me/CertaiKVirtuals" className="text-cyan-400 hover:underline">
               Telegram
             </a>
+            <a href="https://x.com/CertaiK_Agent" className="text-cyan-400 hover:underline">
+              Twitter
+            </a>
             <a href="https://fun.virtuals.io/agents/0x6Cc1Cb82cb8f7a55E74829eEa65F49D3897D4Ef3" className="text-cyan-400 hover:underline">
               Buy $CERTAI
             </a>
