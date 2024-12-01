@@ -39,7 +39,7 @@ export function Roadmap() {
           <Circle className="w-6 h-6 text-cyan-400 mt-1 shrink-0" />
           <div>
             <h3 className="text-xl font-semibold text-white">AI Improvements</h3>
-            <p className="text-gray-400">Improve AI's ability to respond publicly and produce smart contract audits</p>
+            <p className="text-gray-400">Improve AI&apos;s ability to respond publicly and produce smart contract audits</p>
           </div>
         </div>
         <div className="flex items-start gap-4">

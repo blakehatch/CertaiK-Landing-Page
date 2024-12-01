@@ -32,7 +32,7 @@ function Coin({ imageUrl }: CoinProps) {
 }
 
 export default function SpinningCoin() {
-  const [imageUrl, setImageUrl] = useState("/anime-coin.webp?height=200&width=200")
+  const [imageUrl] = useState("/anime-coin.webp?height=200&width=200")
 
   return (
     <div className="w-full h-screen flex flex-col items-center justify-center">
