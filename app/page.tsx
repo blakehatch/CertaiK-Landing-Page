@@ -1,4 +1,4 @@
-import { SpinningCoin } from "@/components/spinning-coin"
+import SpinningCoin from "@/components/spinning-coin"
 import { Roadmap } from "@/components/roadmap"
 import Image from "next/image"
 
@@ -14,24 +14,32 @@ export default function Home() {
             layout="fill"
             objectFit="cover"
             quality={100}
-            className="brightness-50"
+            className="brightness-50 filter blur-sm"
           />
         </div>
         <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/30 via-purple-500/20 to-[#0a0a0a]/70" />
       </div>
 
       {/* Content */}
-      <div className="relative z-10">
+      <div className="relative z-10 mt-20">
         {/* Hero Section */}
         <section className="relative h-screen flex flex-col items-center justify-center">
-          <h1 className="text-6xl md:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600 text-center mb-2 drop-shadow-lg">
+          <h1 className="text-6xl md:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600 text-center mb-2 drop-shadow-lg font-mono outline-white outline-1">
             CertaiK
           </h1>
           <p className="text-sm md:text-base font-medium text-cyan-400 text-center mb-8">
             An AI Agent Powered by Virtuals Protocol
           </p>
+          <a 
+            href="#" 
+            className="bg-cyan-500 text-white font-bold py-2 px-4 rounded opacity-50 cursor-not-allowed"
+            aria-disabled="true"
+          >
+            GET AUDITED
+          </a>
+          <p className="text-xs text-gray-400 mt-2">This feature is experimental and coming soon...</p>
           <SpinningCoin />
-          <p className="text-xl md:text-2xl text-cyan-400 mt-8 text-center max-w-2xl mx-auto px-4 drop-shadow-lg">
+          <p className="text-xl md:text-2xl text-cyan-400 mt-8 mb-8 text-center max-w-2xl mx-auto px-4 drop-shadow-lg">
             The Future of Smart Contract Auditors
           </p>
         </section>

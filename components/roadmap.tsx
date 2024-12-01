@@ -22,14 +22,14 @@ export function Roadmap() {
           </div>
         </div>
         <div className="flex items-start gap-4">
-          <Circle className="w-6 h-6 text-cyan-400 mt-1 shrink-0" />
+          <CheckCircle2 className="w-6 h-6 text-cyan-400 mt-1 shrink-0" />
           <div>
             <h3 className="text-xl font-semibold text-white">Bonding Curve</h3>
             <p className="text-gray-400">Initial launch on DEX and true beginning of the revolution</p>
           </div>
         </div>
         <div className="flex items-start gap-4">
-          <Circle className="w-6 h-6 text-cyan-400 mt-1 shrink-0" />
+          <CheckCircle2 className="w-6 h-6 text-cyan-400 mt-1 shrink-0" />
           <div>
             <h3 className="text-xl font-semibold text-white">Twitter Launch</h3>
             <p className="text-gray-400">Official social media presence and community engagement</p>
@@ -38,12 +38,18 @@ export function Roadmap() {
         <div className="flex items-start gap-4">
           <Circle className="w-6 h-6 text-cyan-400 mt-1 shrink-0" />
           <div>
-            <h3 className="text-xl font-semibold text-white">Model Fine-tuning</h3>
-            <p className="text-gray-400">Enhanced AI capabilities and specialized smart contract analysis</p>
+            <h3 className="text-xl font-semibold text-white">AI Improvements</h3>
+            <p className="text-gray-400">Improve AI's ability to respond publicly and produce smart contract audits</p>
+          </div>
+        </div>
+        <div className="flex items-start gap-4">
+          <Circle className="w-6 h-6 text-cyan-400 mt-1 shrink-0" />
+          <div>
+            <h3 className="text-xl font-semibold text-white">Audit Submission System</h3>
+            <p className="text-gray-400">Development of a user-friendly platform for submitting smart contracts for audit</p>
           </div>
         </div>
       </div>
     </div>
   )
 }
-
