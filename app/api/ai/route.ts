@@ -57,7 +57,11 @@ export async function POST(req: Request ) {
         // If the call is successful, return the result
         console.log(replicateResponse);
         if (replicateResponse) {
-            return NextResponse.json(JSON.stringify(replicateResponse));
+            return NextResponse.json(JSON.stringify(replicateResponse), {
+                headers: {
+                    'Access-Control-Allow-Origin': 'app.certaik.xyz', // Replace with your client domain
+                },
+            });
         } else {
             console.error("Model call failed with response:", replicateResponse);
             return NextResponse.json({ error: "Failed to get a valid response from the model" }, { status: 500 });
