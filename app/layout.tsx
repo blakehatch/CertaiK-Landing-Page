@@ -28,7 +28,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <header className="sticky top-0 bg-black/30 backdrop-blur-lg text-white py-4 shadow-lg z-50">
+        {/* <header className="sticky top-0 bg-black/30 backdrop-blur-lg text-white py-4 shadow-lg z-50">
           <div className="max-w-4xl mx-auto px-4 flex justify-between items-center">
             <a href="https://t.me/CertaiKVirtuals" className="text-cyan-400 hover:underline">
               Telegram
@@ -43,7 +43,7 @@ export default function RootLayout({
               Uniswap
             </a>
           </div>
-        </header>
+        </header> */}
         {children}
       </body>
     </html>

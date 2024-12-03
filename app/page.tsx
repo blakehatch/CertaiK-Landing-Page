@@ -1,8 +1,57 @@
-import SpinningCoin from "@/components/spinning-coin"
-import { Roadmap } from "@/components/roadmap"
-import Image from "next/image"
+"use client";
 
-export default function Home() {
+import { useState } from "react";
+import Image from "next/image";
+import { Textarea } from "@/components/ui/textarea";
+import AuditModal from "@/components/audit-modal";
+
+export default function AuditPage() {
+  const [fileContent, setFileContent] = useState<string | null>(null);
+  const [auditMarkdown, setAuditMarkdown] = useState<string | null>(null);
+  const [isButtonDisabled, setIsButtonDisabled] = useState<boolean>(false);
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setFileContent(e.target?.result as string);
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  // TODO: Swap to this when API for interacting with agents is ready
+  const handleSubmitAudit = async () => {
+    setIsButtonDisabled(true);
+    console.log(fileContent);
+    const response = await fetch('/api/ai', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text: fileContent }),
+    });
+
+    if (response.ok) {
+      const responseData = await response.json();
+
+      const auditReport = JSON.parse(responseData);
+
+      console.log(auditReport)
+      setAuditMarkdown(auditReport);
+      console.log('Audit request sent successfully');
+    } else {
+      console.error('Failed to send audit request');
+      setIsButtonDisabled(false); // Re-enable button if request fails
+    }
+  };
+
+  const handleCloseModal = () => {
+    setAuditMarkdown(null);
+    setIsButtonDisabled(false); // Re-enable button when modal is closed
+  };
+
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-white overflow-hidden">
       {/* Background Image */}
@@ -14,78 +63,67 @@ export default function Home() {
             layout="fill"
             objectFit="cover"
             quality={100}
-            className="brightness-50 filter blur-sm"
+            className="brightness-50 filter blur-md"
           />
         </div>
         <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/30 via-purple-500/20 to-[#0a0a0a]/70" />
       </div>
+      <div className="absolute top-0 left-0 mt-4 ml-4 cursor-pointer" onClick={() => window.open('https://www.certaik.xyz', '_blank', 'noopener,noreferrer')}>
+          <img src="/logo.svg" alt="Logo" className="h-16 w-auto" />
+      </div>
 
       {/* Content */}
-      <div className="relative z-10 mt-20">
-        {/* Hero Section */}
-        <section className="relative h-screen flex flex-col items-center justify-center">
-          <h1 className="text-6xl md:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600 text-center mb-2 drop-shadow-lg font-mono outline-white outline-1">
-            CertaiK
-          </h1>
-          <p className="text-sm md:text-base font-medium text-cyan-400 text-center mb-8">
-            An AI Agent Powered by Virtuals Protocol
+      <div className="relative z-10 mt-10 px-4">
+
+        <h1 className="text-4xl font-bold text-center mb-8 text-white-400">
+          Upload Your Code for Audit*
+        </h1>
+        <div className="flex flex-col items-center">
+          <label className="mb-4 bg-cyan-500 text-white font-bold py-2 px-4 rounded cursor-pointer inline-block">
+            <span>Upload .sol or .rs file</span>
+            <input
+              type="file"
+              accept=".sol,.rs"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+          </label>
+          <div className="flex flex-col items-center mb-4">
+            <span className="text-cyan-400 text-lg">⬆</span>
+            <p className="text-sm text-cyan-400">
+              Upload or Paste code for auditing
+            </p>
+            <span className="text-cyan-400 text-lg">⬇</span>
+          </div>
+          <Textarea 
+            placeholder="Paste Solidity or Rust code here..." 
+            className="mb-8 text-white bg-black h-64" 
+            onChange={(e) => setFileContent(e.target.value)}
+          />
+          <p className="text-sm text-gray-400 mb-2">
+            *This feature is experimental. An AI agent, <a href="https://twitter.com/CertaiK_Agent" className="text-cyan-400 underline">CertaiK</a>, will audit your code. 
+            Please review the results manually and provide feedback to improve performance.
           </p>
-          <a 
-            href="#" 
-            className="bg-cyan-500 text-white font-bold py-2 px-4 rounded opacity-50 cursor-not-allowed"
-            aria-disabled="true"
+          <button 
+            className={`bg-cyan-500 text-white font-bold py-3 px-10 rounded mt-4 text-lg ${isButtonDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+            onClick={handleSubmitAudit}
+            disabled={isButtonDisabled}
           >
-            GET AUDITED
-          </a>
-          <p className="text-xs text-gray-400 mt-2">This feature is experimental and coming soon...</p>
-          <SpinningCoin />
-          <p className="text-xl md:text-2xl text-cyan-400 mt-8 mb-8 text-center max-w-2xl mx-auto px-4 drop-shadow-lg">
-            The Future of Smart Contract Auditors
-          </p>
-        </section>
-
-        {/* Bio Section */}
-        <section className="py-20 px-4 relative">
-          <div className="absolute inset-0 bg-[#0a0a0a]/70 backdrop-blur-sm" />
-          <div className="max-w-4xl mx-auto relative">
-            <h2 className="text-4xl font-bold text-center mb-8 text-cyan-400">
-              Revolutionizing Smart Contract Audits
-            </h2>
-            <div className="space-y-6 text-lg text-gray-300">
-              <p>
-                CertaiK is pioneering the future of blockchain security through advanced AI agent-powered smart contract auditing. 
-                Our mission is to democratize access to professional-grade security audits, making them available to all projects 
-                regardless of size or budget.
-              </p>
-              <p>
-                With $1.8 billion lost to smart contract exploits annually, the need for robust security solutions has never 
-                been more critical. CertaiK leverages cutting-edge artificial intelligence to provide continuous, automated 
-                auditing that adapts to new threats in real-time.
-              </p>
-              <p>
-                By making smart contract security accessible and affordable, we&apos;re working to bring exploit losses to zero 
-                and create a safer blockchain ecosystem for everyone.
-              </p>
-              <p>
-                We are committed to ending the traditional reign of tyranny by outdated security models like Certik&apos;s. 
-                Our equitable AI-driven approach ensures that power is distributed fairly, providing all blockchain projects 
-                with the tools they need to secure their future. By replacing old paradigms with innovative solutions, 
-                CertaiK is leading the charge towards a more just and secure digital world.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Roadmap Section */}
-        <Roadmap />
-
-        {/* Footer */}
-        <footer className="border-t border-cyan-900/30 py-8">
-          <div className="max-w-4xl mx-auto px-4 text-center text-white-500">
-            <p>© 2024 CertaiK. Securing the future of blockchain.</p>
-          </div>
-        </footer>
+            {isButtonDisabled ? 'Generating...' : 'Generate Audit'}
+          </button>
+          {auditMarkdown && (
+            <AuditModal 
+              auditMarkdown={auditMarkdown} 
+              onClose={handleCloseModal} // Use the handleCloseModal function
+            />
+          )}
+          {fileContent && (
+            <pre className="bg-[#0a0a0a]/50 p-4 mt-10 mb-20 rounded-lg text-white placeholder-white max-w-4xl w-full overflow-auto">
+              {fileContent}
+            </pre>
+          )}
+        </div>
       </div>
     </main>
-  )
+  );
 }

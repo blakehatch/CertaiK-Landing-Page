@@ -11,11 +11,17 @@
   "dependencies": {
     "@react-three/drei": "^9.118.0",
     "@react-three/fiber": "^9.0.0-alpha.8",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "lucide-react": "^0.462.0",
     "next": "15.0.3",
     "react": "19.0.0-rc-66855b96-20241106",
     "react-dom": "19.0.0-rc-66855b96-20241106",
+    "react-markdown": "^9.0.1",
     "react-three": "^0.9.7",
+    "replicate": "^1.0.1",
+    "tailwind-merge": "^2.5.5",
+    "tailwindcss-animate": "^1.0.7",
     "three": "^0.171.0",
     "zustand": "^5.0.1"
   },
