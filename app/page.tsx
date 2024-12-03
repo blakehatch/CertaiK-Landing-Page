@@ -74,10 +74,10 @@ export default function AuditPage() {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 mt-10 px-4">
+      <div className="relative z-10 mt-24 px-4">
 
-        <h1 className="text-4xl font-bold text-center mb-8 text-white-400">
-          Upload Your Code for Audit*
+        <h1 className="text-4xl font-bold text-center mt-4 mb-4 text-white-400">
+          Upload Your Code for Audit
         </h1>
         <div className="flex flex-col items-center">
           <label className="mb-4 bg-cyan-500 text-white font-bold py-2 px-4 rounded cursor-pointer inline-block">
@@ -89,7 +89,7 @@ export default function AuditPage() {
               className="hidden"
             />
           </label>
-          <div className="flex flex-col items-center mb-4">
+          <div className="flex flex-col items-center mb-1">
             <span className="text-cyan-400 text-lg">⬆</span>
             <p className="text-sm text-cyan-400">
               Upload or Paste code for auditing
