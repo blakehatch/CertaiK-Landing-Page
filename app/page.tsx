@@ -31,6 +31,7 @@ export default function AuditPage() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ text: fileContent }),
+      signal: AbortSignal.timeout(600000),
     });
 
     if (response.ok) {
