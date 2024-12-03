@@ -7,6 +7,9 @@ import path from 'path';
 
 const replicate = new Replicate();
 
+export const maxDuration = 60; // This function can run for a maximum of 60 seconds
+export const dynamic = 'force-dynamic';
+
 // Function to convert ReadableStream to string
 async function streamToString(stream: Readable): Promise<string> {
   const chunks: Uint8Array[] = [];
