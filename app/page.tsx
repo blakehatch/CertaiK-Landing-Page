@@ -21,16 +21,27 @@ export default function AuditPage() {
     }
   };
 
-  // TODO: Swap to this when API for interacting with agents is ready
+  const removeComments = (report: string): string => {
+    // Remove single-line comments for Rust (//) and Solidity (//)
+    report = report.replace(/\/\/.*$/gm, '');
+    // Remove multi-line comments for Solidity (/* */)
+    report = report.replace(/\/\*[\s\S]*?\*\//g, '');
+    return report;
+  };
+
   const handleSubmitAudit = async () => {
     setIsButtonDisabled(true);
-    console.log(fileContent);
+
+    const cleanedFileContent = removeComments(fileContent || '');
+
+    console.log(cleanedFileContent);
+
     const response = await fetch('/api/ai', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ text: fileContent }),
+      body: JSON.stringify({ text: cleanedFileContent }),
       signal: AbortSignal.timeout(600000),
     });
 
@@ -39,7 +50,8 @@ export default function AuditPage() {
 
       const auditReport = JSON.parse(responseData);
 
-      console.log(auditReport)
+      console.log(auditReport);
+
       setAuditMarkdown(auditReport);
       console.log('Audit request sent successfully');
     } else {
