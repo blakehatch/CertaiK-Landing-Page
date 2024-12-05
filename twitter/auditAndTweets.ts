@@ -210,7 +210,7 @@ function composeTweetMessage(
   ): string {
     return `Hi @${twitterHandle}!
   
-  You are trending right now on CoinGecko! �
+  You are trending right now on CoinGecko!
   
   We audited your contract to help you:
   
