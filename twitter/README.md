@@ -33,7 +33,8 @@ This project is an early-stage script that fetches trending cryptocurrency coins
    ```env
    ETHERSCAN_API_KEY=your_etherscan_api_key
    BSCSCAN_API_KEY=your_bscscan_api_key
-   POLYGONSCAN_API_KEY=your_polygonscan_api_key   ```
+   POLYGONSCAN_API_KEY=your_polygonscan_api_key   
+   ```
 
    - Replace `your_etherscan_api_key` with your Etherscan API key.
    - Replace `your_bscscan_api_key` with your BscScan API key.
@@ -78,6 +79,7 @@ npm run fetchTrendingCoins
 ## Output
 
 The data is saved in
+```
 twitter/
 ├── data/
 │ ├── ethereum/
@@ -86,7 +88,7 @@ twitter/
 │ │ ├── <contractAddress>.json
 │ └── polygon-pos/
 │ ├── <contractAddress>.json
-
+```
 
 Each JSON file contains:
 
