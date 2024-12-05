@@ -85,7 +85,7 @@ export async function auditAndTweet() {
 
         // Post tweet
         console.log(tweetMessage);
-        // await postTweet(tweetMessage);
+        await postTweet(tweetMessage);
 
         // Save contract as audited
         await saveAuditedContract(contractAddress);
@@ -158,7 +158,7 @@ We audited your contract to help you:
 🟠 Medium Severity Issues: ${summary.medium}
 🟢 Low Severity Issues: ${summary.low}
 
-For more details, visit: certaik.xyz and audit your contract.
+For more details, visit https://certaik.xyz and audit your contract.
 
 #${coinName.replace(/\s+/g, '')} #Crypto #CertaiK #Audit`;
 }
