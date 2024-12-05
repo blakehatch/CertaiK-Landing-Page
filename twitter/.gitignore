@@ -29,3 +29,5 @@ yarn-error.log*
 
 # Miscellaneous
 *.swp
+
+auditedContracts.json

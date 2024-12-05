@@ -15,13 +15,34 @@ const POLYGONSCAN_API_KEY = process.env.POLYGONSCAN_API_KEY;
 const TRENDING_COINS_ENDPOINT = '/search/trending';
 const COIN_DETAILS_ENDPOINT = (id: string) => `/coins/${id}`;
 
+const processedCoinsFile = path.join(__dirname, 'processedCoins.json');
+
+async function loadProcessedCoins(): Promise<Set<string>> {
+    try {
+      const data = await fs.readFile(processedCoinsFile, 'utf8');
+      const coins = JSON.parse(data) as string[];
+      return new Set(coins);
+    } catch {
+      // If file doesn't exist, return an empty set
+      return new Set();
+    }
+  }
+
+async function saveProcessedCoin(coinId: string) {
+    const processedCoins = await loadProcessedCoins();
+    processedCoins.add(coinId);
+    await fs.writeFile(processedCoinsFile, JSON.stringify(Array.from(processedCoins)), 'utf8');
+}  
+
 // Function to introduce a delay
 function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function fetchTrendingCoins() {
+export async function fetchTrendingCoins() {
   try {
+    const processedCoins = await loadProcessedCoins();
+
     // 1. Fetch Trending Coins
     const trendingResponse = await axios.get(`${COINGECKO_API_URL}${TRENDING_COINS_ENDPOINT}`);
     const trendingCoins = trendingResponse.data.coins;
@@ -29,6 +50,13 @@ async function fetchTrendingCoins() {
     for (const coin of trendingCoins) {
       const { item } = coin;
       const coinId = item.id;
+
+    // Skip if the coin has already been processed
+    if (processedCoins.has(coinId)) {
+        console.log(`Coin ${item.name} (ID: ${coinId}) has already been processed, skipping.`);
+        continue;
+        }
+
       console.log(`\nFetching details for coin: ${item.name} (ID: ${coinId})`);
 
       // 2. Fetch Coin Details using Coin ID
@@ -95,6 +123,8 @@ async function fetchTrendingCoins() {
       } else {
         console.log(`No platforms found for ${item.name}`);
       }
+
+      await saveProcessedCoin(coinId);
 
       // Add a 2-second delay before processing the next coin
       await delay(2000);
@@ -226,5 +256,3 @@ async function saveContractSourceCode(
     console.error(`Error saving contract source code for address ${contractAddress}:`, error);
   }
 }
-
-fetchTrendingCoins();
