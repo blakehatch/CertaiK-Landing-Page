@@ -38,7 +38,7 @@ async function runTasks() {
 // Run tasks immediately upon startup
 runTasks();
 
-// Schedule tasks to run every hour
-cron.schedule('0 * * * *', async () => {
+// Schedule tasks to run every three hours
+cron.schedule('0 */3 * * *', async () => {
   await runTasks();
 });

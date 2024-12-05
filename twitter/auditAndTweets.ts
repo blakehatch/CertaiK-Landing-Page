@@ -125,22 +125,60 @@ async function callReplicateModel(contractSourceCode: string): Promise<string | 
 }
 
 // Function to summarize audit findings
+// Function to summarize audit findings
 function summarizeAudit(auditReport: string): { high: number; medium: number; low: number } {
-    // Simple parsing logic based on numbering under each severity heading
-    const highSection = auditReport.split('**High Severity Findings:**')[1]?.split('**Medium Severity Findings:**')[0];
-    const mediumSection = auditReport.split('**Medium Severity Findings:**')[1]?.split('**Low Severity Findings:**')[0];
-    const lowSection = auditReport.split('**Low Severity Findings:**')[1];
-  
-    const highMatches = highSection ? (highSection.match(/^\d+\./gm) || []).length : 0;
-    const mediumMatches = mediumSection ? (mediumSection.match(/^\d+\./gm) || []).length : 0;
-    const lowMatches = lowSection ? (lowSection.match(/^\d+\./gm) || []).length : 0;
-  
-    return {
-      high: highMatches,
-      medium: mediumMatches,
-      low: lowMatches,
+    // Define regex patterns for headings
+    const headingPatterns = [
+        { name: 'high', regex: /^\s*(\*\*|\*)?\s*High Severity Findings?:?\s*(\*\*|\*)?\s*$/im },
+        { name: 'medium', regex: /^\s*(\*\*|\*)?\s*Medium Severity Findings?:?\s*(\*\*|\*)?\s*$/im },
+        { name: 'low', regex: /^\s*(\*\*|\*)?\s*Low Severity Findings?:?\s*(\*\*|\*)?\s*$/im },
+        { name: 'recommendations', regex: /^\s*(\*\*|\*)?\s*Recommendations?:?\s*(\*\*|\*)?\s*$/im },
+        { name: 'bestPractices', regex: /^\s*(\*\*|\*)?\s*Best Practices?:?\s*(\*\*|\*)?\s*$/im },
+    ];
+
+    // Locate heading positions
+    interface HeadingPosition {
+        name: string;
+        index: number;
+    }
+
+    const headingPositions: HeadingPosition[] = headingPatterns
+        .map(pattern => {
+            const match = auditReport.match(pattern.regex);
+            return match && match.index !== undefined ? { name: pattern.name, index: match.index } : null;
+        })
+        .filter((pos): pos is HeadingPosition => pos !== null);
+
+    // Sort headings by position in the text
+    headingPositions.sort((a, b) => a.index - b.index);
+
+    // Extract sections between headings
+    const sections: { [key: string]: string } = {};
+    for (let i = 0; i < headingPositions.length; i++) {
+        const currentHeading = headingPositions[i];
+        const nextHeadingIndex = i + 1 < headingPositions.length ? headingPositions[i + 1].index : auditReport.length;
+
+        const sectionContent = auditReport.slice(
+            currentHeading.index + auditReport.slice(currentHeading.index).match(headingPatterns.find(p => p.name === currentHeading.name)!.regex)![0].length,
+            nextHeadingIndex
+        );
+        sections[currentHeading.name] = sectionContent.trim();
+    }
+
+    // Helper to count items in a section based on numbering
+    const countFindings = (section: string): number => {
+        const numberedItemsRegex = /^\s*\d+\./gm;
+        return (section.match(numberedItemsRegex) || []).length;
     };
-  }
+
+    // Count findings in each severity section
+    const high = sections['high'] ? countFindings(sections['high']) : 0;
+    const medium = sections['medium'] ? countFindings(sections['medium']) : 0;
+    const low = sections['low'] ? countFindings(sections['low']) : 0;
+
+    return { high, medium, low };
+}
+
 
 // Function to compose tweet message
 function composeTweetMessage(
