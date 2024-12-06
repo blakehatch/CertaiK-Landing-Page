@@ -46,9 +46,10 @@ export async function POST(req: Request ) {
     const textJson = await streamToString(req.body as unknown as Readable);
     const parsedObject = JSON.parse(textJson);
     const text = parsedObject.text;
+    const modifiedPrompt = parsedObject.prompt;
 
     // Fetch the audit prompt template
-    const auditPromptResponse = await fs.readFile(path.join(process.cwd(), 'prompts', 'audit-prompt.md'), 'utf8');
+    const auditPromptResponse = modifiedPrompt || await fs.readFile(path.join(process.cwd(), 'prompts', 'audit-prompt.md'), 'utf8');
 
     // Insert the code text into the audit prompt
     const auditPrompt = auditPromptResponse.replace('```\n\n```', `\`\`\`\n${text}\n\`\`\``);

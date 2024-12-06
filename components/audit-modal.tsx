@@ -32,25 +32,26 @@ const AuditModal: React.FC<AuditModalProps> = ({ auditMarkdown, onClose }) => {
           <img src="/logo.svg" alt="Logo" className="h-16 w-auto" />
           <div>
             <button 
-              className="bg-cyan-500 text-white font-bold py-2 px-4 rounded mr-2"
+              className="bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-bold py-2 px-4 rounded mr-2"
               onClick={handleCopy}
             >
               Copy
             </button>
             <button 
-              className="bg-cyan-500 text-white font-bold py-2 px-4 rounded"
+              className="bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-bold py-2 px-4 rounded"
               onClick={handleDownload}
             >
               Download
             </button>
           </div>
         </div>
-        <div className="bg-[#0a0a0a]/50 p-4 mt-10 mb-10 rounded-lg text-white placeholder-white max-w-4xl w-full overflow-y-auto h-[500px]">
-          <ReactMarkdown>{auditMarkdown}</ReactMarkdown>
+        <div className="bg-[#0a0a0a]/50 p-4 mt-10 mb-10 rounded-lg text-white placeholder-white max-w-4xl w-full overflow-scroll h-[500px] border border-white rounded-lg">
+          <ReactMarkdown className="overflow-scroll">{auditMarkdown}</ReactMarkdown>
         </div>
+        <p className="text-center mt-4 animate-bounce bg-clip-text text-transparent bg-gradient-to-r from-cyan-500 to-purple-500">Scroll to see more of the audit report...</p>
         <div className="flex mb-10">
           <button 
-            className="text-white font-bold py-2 px-4 rounded bg-red-500"
+            className="text-white font-bold py-2 px-4 rounded bg-gradient-to-r from-red-500 to-red-700"
             onClick={onClose}
           >
             Close
@@ -58,7 +59,6 @@ const AuditModal: React.FC<AuditModalProps> = ({ auditMarkdown, onClose }) => {
         </div>
       </div>
     </div>
-  );
-};
+  );};
 
 export default AuditModal;
