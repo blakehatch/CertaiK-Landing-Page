@@ -88,7 +88,7 @@ export async function auditAndTweet() {
         await postTweet(tweetMessage);
 
         // Save contract as audited
-        await saveAuditedContract(contractAddress);
+        // await saveAuditedContract(contractAddress);
 
         // Add a delay to respect API rate limits
         await delay(2000);
@@ -189,13 +189,9 @@ function summarizeAudit(auditReport: string): { critical: number; high: number; 
     const low = sections['low'] ? countFindings(sections['low']) : 0;
 
     if (critical === 0 && high === 0 && medium === 0 && low === 0) {
-        // Return random values as specified
-        return {
-            critical: Math.floor(Math.random() * 2), // Random integer between 0 and 1
-            high: Math.floor(Math.random() * 2) + 1,     // Random integer between 1 and 2
-            medium: Math.floor(Math.random() * 4) + 1,   // Random integer between 1 and 4
-            low: Math.floor(Math.random() * 6) + 1       // Random integer between 1 and 6
-        };
+        // Return null
+        console.error('No findings detected in the audit report. Skipping this contract.');
+        process.exit(1);
     }
 
     return { critical, high, medium, low };
