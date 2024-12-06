@@ -97,7 +97,7 @@ export default function AuditPage() {
               className="hidden"
             />
           </label>
-          <div className="fixed inset-0 flex justify-center items-center z-0 pointer-events-none opacity-90" style={{ top: '-240px' }}>
+          <div className="fixed inset-0 flex justify-center items-center z-0 pointer-events-none opacity-90" style={{ top: '-500px' }}>
             <div className="p-1 max-w-[900px] w-full z-0 h-64 rounded-full" 
                  style={{ 
                    background: 'radial-gradient(circle, rgba(255,0,0,0.4) 0%, rgba(0,0,255,0.4) 120%)', 
