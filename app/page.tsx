@@ -69,23 +69,26 @@ export default function AuditPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black text-white overflow-hidden">
-      <div className="fixed top-0 left-0 w-full bg-gradient-to-r from-cyan-500 to-cyan-700 text-white text-center py-1 z-50">
-        <a href="https://x.com/blakewhatch/status/1864829229604499648?s=46" target="_blank" rel="noopener noreferrer" className="underline">
-          🚨 Active Bug Bounty: Participate now for a chance to earn rewards! 🚨
+    <main 
+      className="min-h-screen bg-black text-white overflow-hidden" 
+      style={{ backgroundImage: 'url(/bg-pattern.webp)', backgroundSize: 'cover' }}
+    >
+      <div className="fixed top-0 left-0 w-full bg-gradient-to-r from-cyan-500 to-red-500 text-white text-center py-1 z-50 backdrop-blur-md bg-opacity-30">
+        <a href="https://x.com/blakewhatch/status/1864829229604499648?s=46" target="_blank" rel="noopener noreferrer" className="z-20 underline">
+          Active Bug Bounty: Participate now for a chance to earn rewards!
         </a>
       </div>
 
       <div className="absolute top-0 left-0 mt-16 ml-4 cursor-pointer" onClick={() => window.open('https://www.certaik.xyz', '_blank', 'noopener,noreferrer')}>
-        <img src="/logo.svg" alt="Logo" className="h-16 w-auto" />
+        <img src="/logo.svg" alt="Logo" className="h-12 w-auto" />
       </div>
 
       <div className="relative z-10 mt-32 px-4">
-        <h1 className="text-5xl font-bold text-center mt-4 mb-4 text-white">
+        <h1 className="text-5xl text-center mt-4 mb-10 text-white">
            Smart Contract Auditor AI
         </h1>
         <div className="flex flex-col items-center">
-          <label className="mb-4 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-bold py-2 px-4 rounded cursor-pointer inline-block">
+          <label className="mb-10 bg-gradient-to-r from-cyan-500 z-10 to-purple-500 text-white py-1 px-3 rounded cursor-pointer inline-block">
             <span>Upload .sol or .rs file</span>
             <input
               type="file"
@@ -94,24 +97,32 @@ export default function AuditPage() {
               className="hidden"
             />
           </label>
+          <div className="fixed inset-0 flex justify-center items-center z-0 pointer-events-none opacity-90" style={{ top: '-240px' }}>
+            <div className="p-1 max-w-[900px] w-full z-0 h-64 rounded-full" 
+                 style={{ 
+                   background: 'radial-gradient(circle, rgba(255,0,0,0.4) 0%, rgba(0,0,255,0.4) 120%)', 
+                   filter: 'blur(60px) opacity(0.99)'  // Increased blur and adjusted opacity
+                 }}>
+            </div>
+          </div>
           <Textarea 
-            placeholder="Paste Solidity or Rust code here..." 
-            className="mb-8 text-white bg-gray-800 h-64" 
-            onChange={(e) => setFileContent(e.target.value)}
-          />
-          <p className="text-sm text-gray-400 mb-2">
-            *This feature is experimental. An AI agent, <a href="https://twitter.com/CertaiK_Agent" className="text-cyan-400 underline">CertaiK</a>, will audit your code. 
-            Please review the results manually and provide feedback to improve performance.
+              placeholder="Paste Solidity or Rust code here..." 
+              className="text-white bg-black z-10 h-48 max-w-[800px] w-full rounded mb-6"
+              onChange={(e) => setFileContent(e.target.value)}
+            />
+          <p className="text-xs text-gray-400 z-10 mb-2 max-w-[600px]">
+            *Experimental feature: AI agent <a href="https://twitter.com/CertaiK_Agent" className="text-cyan-400 underline">CertaiK</a> audits your code. 
+            Manually review results and provide feedback.
           </p>
-          <div className="flex items-center space-x-4 mt-4">
+          <div className="flex items-center z-10 space-x-3 mt-4">
             <button 
-              className={`bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-bold py-3 px-10 rounded text-lg ${isButtonDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`bg-gradient-to-r from-cyan-500 to-purple-500 text-white py-2 px-8 rounded text-md ${(isButtonDisabled || !fileContent) ? 'opacity-50 cursor-not-allowed' : ''}`}
               onClick={handleSubmitAudit}
-              disabled={isButtonDisabled}
+              disabled={isButtonDisabled || !fileContent}
             >
               {isButtonDisabled ? (
                 <div className="flex items-center">
-                  <svg className="animate-spin h-5 w-5 mr-3 text-white" viewBox="0 0 24 24">
+                  <svg className="animate-spin h-4 w-4 mr-2 text-white" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
                   </svg>
@@ -120,7 +131,7 @@ export default function AuditPage() {
               ) : 'Generate Audit'}
             </button>
             <button 
-              className="bg-gradient-to-r from-gray-500 to-gray-700 text-white font-bold py-3 px-6 rounded text-lg"
+              className="bg-gradient-to-r from-gray-500 to-gray-700 text-white py-2 px-5 rounded text-md"
               onClick={() => setShowAdvancedOptions(true)}
             >
               Advanced Options
@@ -140,7 +151,7 @@ export default function AuditPage() {
             />
           }
           {fileContent && (
-            <pre className="bg-gray-800/50 p-4 mt-10 mb-20 rounded-lg text-white max-w-4xl w-full overflow-auto">
+            <pre className="bg-gray-800/50 p-4 mt-8 mb-16 rounded-lg text-white max-w-4xl w-full overflow-auto">
               {fileContent}
             </pre>
           )}

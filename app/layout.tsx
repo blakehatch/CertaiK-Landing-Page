@@ -1,17 +1,8 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { Figtree } from "next/font/google";
 import "./globals.css";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
+const figtree = Figtree({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: "CertaiK",
@@ -26,7 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${figtree.className} antialiased`}
       >
         {/* <header className="sticky top-0 bg-black/30 backdrop-blur-lg text-white py-4 shadow-lg z-50">
           <div className="max-w-4xl mx-auto px-4 flex justify-between items-center">
