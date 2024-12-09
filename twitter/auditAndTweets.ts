@@ -243,12 +243,34 @@ For more details, visit https://certaik.xyz and audit your contract.
 #${coinName.replace(/\s+/g, '')} #Crypto #CertaiK #Audit`;
 }
 
+function randomGreeting(): string {
+  const greetings = [
+    "Hi",
+    "Hello",
+    "Hey there",
+    "Greetings",
+    "Howdy",
+    "Here's your audit",
+    "Hey",
+    "What's up",
+    "Good day",
+    "Salutations",
+    "Yo",
+    "Ahoy",
+    "No problem",
+    "Finished ",
+    "There it is"
+  ];
+  const randomIndex = Math.floor(Math.random() * greetings.length);
+  return greetings[randomIndex];
+}
+
 // Compose reply tweet message
 function composeAuditReplyTweetMessage(
   twitterHandle: string,
   pastebinLink: string
 ): string {
-  return `Hi @${twitterHandle}!
+  return `${randomGreeting()} @${twitterHandle}!
 
 Here is the audit you requested:
 

@@ -62,7 +62,7 @@ runTrendingCoinsTask();
 runAuditAndTweetTask();
 
 // Schedule audit and tweet task to run every 10 minutes
-cron.schedule('*/10 * * * *', async () => {
+cron.schedule('*/1 * * * *', async () => {
   await runAuditAndTweetTask();
 });
 
