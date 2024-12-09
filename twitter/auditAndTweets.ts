@@ -130,6 +130,8 @@ async function callReplicateModel(contractSourceCode: string): Promise<string | 
 
     // console.log(contractSourceCode);
 
+    // console.log("Adding sourcec code to prompt");
+
     if (contractSourceCode.length > MAX_INPUT_LENGTH) {
       console.warn(`Contract source code exceeds maximum length (${MAX_INPUT_LENGTH} characters). Trimming the input.`);
       trimmedSourceCode = contractSourceCode.slice(0, MAX_INPUT_LENGTH) + '\n// [Content truncated due to length]';

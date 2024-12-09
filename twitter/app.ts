@@ -58,12 +58,13 @@ async function runAuditAndTweetTask() {
 
 // Run tasks immediately upon startup
 runTasks();
-runTrendingCoinsTask();
+//runTrendingCoinsTask();
 runAuditAndTweetTask();
 
 // Schedule audit and tweet task to run every 10 minutes
-cron.schedule('*/1 * * * *', async () => {
-  await runAuditAndTweetTask();
+cron.schedule('*/10 * * * *', async () => {
+  runTasks();
+  runAuditAndTweetTask();
 });
 
 // Schedule trending coins task to run every three hours
