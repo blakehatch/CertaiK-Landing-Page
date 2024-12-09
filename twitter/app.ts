@@ -23,13 +23,14 @@ async function runTasks() {
   logger.info('Running tasks at ' + new Date().toLocaleString());
   
   try {
+
+    await auditAndReplyToMentions();
+
     // Fetch trending coins
     await fetchTrendingCoins();
     
     // Audit and tweet
     await auditAndTweet();
-
-    await auditAndReplyToMentions();
     
     logger.info('Tasks completed successfully.');
   } catch (error) {

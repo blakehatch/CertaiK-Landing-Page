@@ -1,14 +1,21 @@
+// Make sure you have installed the dependencies:
+// npm install axios dotenv twitter-api-v2 pastebin-api replicate fs-extra
+// Also ensure you have a .env file with the required keys such as:
+// TWITTER_API_KEY, TWITTER_API_SECRET, TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_SECRET, REPLICATE_API_TOKEN, TWITTER_HANDLE
+// ETHERSCAN_API_KEY, BSCSCAN_API_KEY, POLYGONSCAN_API_KEY as needed.
+
 import axios from 'axios';
 import fs from 'fs/promises';
 import path from 'path';
 import dotenv from 'dotenv';
-import { TwitterApi } from 'twitter-api-v2';
+import { TwitterApi, TweetV2 } from 'twitter-api-v2';
+// @ts-ignore - pastebin-api might not have type declarations
 import { PasteClient, Publicity, ExpireDate } from "pastebin-api";
 import Replicate from 'replicate';
 
 dotenv.config();
 
-// Twitter API credentials from .env file
+// Twitter API credentials
 const twitterClient = new TwitterApi({
   appKey: process.env.TWITTER_API_KEY as string,
   appSecret: process.env.TWITTER_API_SECRET as string,
@@ -16,13 +23,22 @@ const twitterClient = new TwitterApi({
   accessSecret: process.env.TWITTER_ACCESS_SECRET as string,
 });
 
-// Replicate API configuration
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_TOKEN,
 });
 
-// Tip: load dev key from a `.env` file
-const client = new PasteClient("DEV_KEY_HERE");
+// Pastebin client
+if (!process.env.PASTEBIN_API_KEY) {
+  throw new Error("No PASTEBIN_API_KEY found in environment variables.");
+}
+
+const client = new PasteClient(process.env.PASTEBIN_API_KEY);
+
+
+// API keys for different explorers
+const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY;
+const BSCSCAN_API_KEY = process.env.BSCSCAN_API_KEY;
+const POLYGONSCAN_API_KEY = process.env.POLYGONSCAN_API_KEY;
 
 const auditedContractsFile = path.join(__dirname, 'auditedContracts.json');
 
@@ -43,6 +59,241 @@ async function saveAuditedContract(contractAddress: string) {
   await fs.writeFile(auditedContractsFile, JSON.stringify(Array.from(auditedContracts)), 'utf8');
 }
 
+// Fetch contract source code from a supported explorer
+async function fetchContractSourceCodeFromExplorer(platform: string, sha256Address: string): Promise<string | null> {
+  try {
+    const apiKey = getApiKeyForPlatform(platform);
+    if (!apiKey) {
+      console.log(`No API key found for platform: ${platform}`);
+      return null;
+    }
+
+    const url = `https://api.${platform}.com/api`;
+    const params = new URLSearchParams({
+      module: 'contract',
+      action: 'getsourcecode',
+      address: sha256Address,
+      apikey: apiKey,
+    });
+
+    const response = await axios.get(`${url}?${params.toString()}`);
+
+    const result = response.data.result;
+    if (result && result.length > 0 && result[0].SourceCode) {
+      return result[0].SourceCode;
+    } else {
+      console.log(`No source code found for contract ${sha256Address} on ${platform}`);
+      return null;
+    }
+  } catch (error) {
+    console.error(`Error fetching contract source code from ${platform} for address ${sha256Address}:`, error);
+    return null;
+  }
+}
+
+// Helper function to get the API key for a given platform
+function getApiKeyForPlatform(platform: string): string | undefined {
+  switch (platform) {
+    case 'etherscan':
+      return ETHERSCAN_API_KEY;
+    case 'bscscan':
+      return BSCSCAN_API_KEY;
+    case 'polygonscan':
+      return POLYGONSCAN_API_KEY;
+    default:
+      return undefined;
+  }
+}
+
+// Function to scan multiple chains for the given sha256 address and return the source code if found
+async function scanChainsForSha256Address(sha256Address: string): Promise<{platform: string; sourceCode: string} | null> {
+  const platforms = ['etherscan', 'bscscan', 'polygonscan']; 
+  for (const platform of platforms) {
+    const sourceCode = await fetchContractSourceCodeFromExplorer(platform, sha256Address);
+    if (sourceCode) {
+      console.log(`Found contract source code on ${platform} for address ${sha256Address}`);
+      return { platform, sourceCode };
+    }
+  }
+  return null;
+}
+
+// Call Replicate model for audit
+async function callReplicateModel(contractSourceCode: string): Promise<string | undefined> {
+  try {
+    const MAX_INPUT_LENGTH = 25000; // Adjust based on the model's limitations
+
+    let trimmedSourceCode = contractSourceCode;
+
+    if (contractSourceCode.length > MAX_INPUT_LENGTH) {
+      console.warn(`Contract source code exceeds maximum length (${MAX_INPUT_LENGTH} characters). Trimming the input.`);
+      trimmedSourceCode = contractSourceCode.slice(0, MAX_INPUT_LENGTH) + '\n// [Content truncated due to length]';
+    }
+
+    // Assuming 'prompt' might be undefined and we have the contract code in 'trimmedSourceCode'
+
+    const text = trimmedSourceCode;
+
+    // If a prompt string is provided, use it. Otherwise, read from the audit-prompt.md file.
+    const auditPromptResponse = trimmedSourceCode || await fs.readFile(path.join(process.cwd(), 'prompts', 'audit-prompt.md'), 'utf8');
+
+    // Insert the contract code into the placeholder backticks in the prompt template
+    const auditPrompt = auditPromptResponse.replace('```\n\n```', `\`\`\`\n${text}\n\`\`\``);
+
+    // Now use `auditPrompt` as the prompt input for the model:
+    const input = {
+      prompt: auditPrompt,
+      max_new_tokens: 1024,
+      prompt_template: "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n{system_prompt}<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n{prompt}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n",
+};
+
+
+    const output = await replicate.run("meta/meta-llama-3-70b-instruct", { input });
+    const outputString = Array.isArray(output) ? output.join("") : String(output);
+    return outputString;
+  } catch (error) {
+    console.error("Error calling Replicate model:", error);
+    return undefined;
+  }
+}
+
+// Summarize audit findings
+function summarizeAudit(auditReport: string): { critical: number; high: number; medium: number; low: number } | null {
+  const headingPatterns = [
+    { name: 'critical', regex: /^\s*(\*\*|\*)?\s*Critical Severity Findings?:?\s*(\*\*|\*)?\s*$/im },
+    { name: 'high', regex: /^\s*(\*\*|\*)?\s*High Severity Findings?:?\s*(\*\*|\*)?\s*$/im },
+    { name: 'medium', regex: /^\s*(\*\*|\*)?\s*Medium Severity Findings?:?\s*(\*\*|\*)?\s*$/im },
+    { name: 'low', regex: /^\s*(\*\*|\*)?\s*Low Severity Findings?:?\s*(\*\*|\*)?\s*$/im },
+    { name: 'recommendations', regex: /^\s*(\*\*|\*)?\s*Recommendations?:?\s*(\*\*|\*)?\s*$/im },
+  ];
+
+  interface HeadingPosition {
+    name: string;
+    index: number;
+  }
+
+  const headingPositions: HeadingPosition[] = headingPatterns
+    .map(pattern => {
+      const match = auditReport.match(pattern.regex);
+      return match && match.index !== undefined ? { name: pattern.name, index: match.index } : null;
+    })
+    .filter((pos): pos is HeadingPosition => pos !== null);
+
+  headingPositions.sort((a, b) => a.index - b.index);
+
+  const sections: { [key: string]: string } = {};
+  for (let i = 0; i < headingPositions.length; i++) {
+    const currentHeading = headingPositions[i];
+    const nextHeadingIndex = i + 1 < headingPositions.length ? headingPositions[i + 1].index : auditReport.length;
+    const headingMatch = auditReport.slice(currentHeading.index).match(headingPatterns.find(p => p.name === currentHeading.name)!.regex);
+    if (!headingMatch) continue;
+    const sectionContent = auditReport.slice(
+      currentHeading.index + headingMatch[0].length,
+      nextHeadingIndex
+    );
+    sections[currentHeading.name] = sectionContent.trim();
+  }
+
+  const countFindings = (section: string): number => {
+    const numberedItemsRegex = /^\s*\d+\.\s+/gm; 
+    return (section.match(numberedItemsRegex) || []).length;
+  };
+
+  const critical = sections['critical'] ? countFindings(sections['critical']) : 0;
+  const high = sections['high'] ? countFindings(sections['high']) : 0;
+  const medium = sections['medium'] ? countFindings(sections['medium']) : 0;
+  const low = sections['low'] ? countFindings(sections['low']) : 0;
+
+  if (critical === 0 && high === 0 && medium === 0 && low === 0) {
+    console.error('No findings detected in the audit report.');
+    return null;
+  }
+
+  return { critical, high, medium, low };
+}
+
+// Compose tweet message with summary
+function composeTweetMessage(
+  twitterHandle: string,
+  coinName: string,
+  summary: { critical: number; high: number; medium: number; low: number },
+  pastebinLink: string
+): string {
+  return `Hi @${twitterHandle}!
+  
+You are trending right now on CoinGecko!📈
+
+We audited your contract to help you:
+
+🔴 Critical Severity Issues: ${summary.critical}
+🟠 High Severity Issues: ${summary.high}
+🟡 Medium Severity Issues: ${summary.medium}
+🟢 Low Severity Issues: ${summary.low}
+
+Full Report: ${pastebinLink}
+
+For more details, visit https://certaik.xyz and audit your contract.
+
+#${coinName.replace(/\s+/g, '')} #Crypto #CertaiK #Audit`;
+}
+
+// Compose reply tweet message
+function composeAuditReplyTweetMessage(
+  twitterHandle: string,
+  pastebinLink: string
+): string {
+  return `Hi @${twitterHandle}!
+
+Here is the audit you requested:
+
+${pastebinLink}`;
+}
+
+// Post a tweet
+async function postTweet(message: string) {
+  try {
+    await twitterClient.v2.tweet(message);
+    console.log('Tweet posted successfully.');
+  } catch (error) {
+    console.error('Error posting tweet:', error);
+  }
+}
+
+// Post a reply tweet
+async function postAuditReply(message: string, tweetId: string) {
+  try {
+    // reply expects (text: string, replyToId: string)
+    await twitterClient.v2.reply(message, tweetId);
+    console.log('Tweet reply posted successfully.');
+  } catch (error) {
+    console.error('Error posting tweet reply:', error);
+  }
+}
+
+// Upload audit report to Pastebin
+async function uploadToPastebin(auditReport: string, title: string): Promise<string> {
+  try {
+    const pasteUrl = await client.createPaste({
+      code: auditReport,
+      expireDate: ExpireDate.Never,
+      publicity: Publicity.Public,
+      name: title,
+    });
+    const rawUrl = pasteUrl.replace('https://pastebin.com/', 'https://pastebin.com/raw/');
+
+    return rawUrl;
+  } catch (error) {
+    console.error("Error uploading to Pastebin:", error);
+    throw error;
+  }
+}
+
+// Delay
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Audit and tweet from local data directory (example)
 export async function auditAndTweet() {
   // Load audited contracts
   const auditedContracts = await loadAuditedContracts();
@@ -66,8 +317,8 @@ export async function auditAndTweet() {
 
         const { contractSourceCode, twitterHandle, coinDetails } = data;
 
-        if (!twitterHandle) {
-          console.log(`No Twitter handle for contract ${contractAddress}, skipping.`);
+        if (!twitterHandle || !coinDetails || !coinDetails.name || !contractSourceCode) {
+          console.log(`Missing information for contract ${contractAddress}, skipping.`);
           continue;
         }
 
@@ -82,17 +333,24 @@ export async function auditAndTweet() {
         }
 
         // Summarize audit findings
-        const summary = await summarizeAudit(auditReport);
+        const summary = summarizeAudit(auditReport);
+        if (!summary) {
+          console.log("No findings or failed to summarize. Skipping.");
+          continue;
+        }
+
+        // Upload full report to Pastebin
+        const pastebinLink = await uploadToPastebin(auditReport, `Audit Report ${contractAddress}`);
 
         // Compose tweet message
-        const tweetMessage = composeTweetMessage(twitterHandle, coinDetails.name, summary);
+        const tweetMessage = composeTweetMessage(twitterHandle, coinDetails.name, summary, pastebinLink);
 
         // Post tweet
         console.log(tweetMessage);
         await postTweet(tweetMessage);
 
         // Save contract as audited
-        // await saveAuditedContract(contractAddress);
+        await saveAuditedContract(contractAddress);
 
         // Add a delay to respect API rate limits
         await delay(2000);
@@ -112,37 +370,68 @@ export async function auditAndReplyToMentions() {
   const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
 
   // Fetch recent mentions from the last hour
-  const mentions = await twitterClient.v2.search(`@${process.env.TWITTER_HANDLE}`, {
-    start_time: oneHourAgo.toISOString(),
-    'tweet.fields': 'created_at',
-  });
+  const query = `@${process.env.TWITTER_HANDLE}`;
 
-  for (const tweet of mentions.data) {
+  const mentions = await twitterClient.v2.search(query, {
+    start_time: oneHourAgo.toISOString(),
+    'tweet.fields': 'created_at,author_id',
+    'user.fields': 'username'  });
+
+
+  // Use the paginator's tweets property to get the TweetV2[]
+  const tweets: TweetV2[] = mentions.tweets;
+
+  for (const tweet of tweets) {
     const tweetText = tweet.text;
     const tweetId = tweet.id;
-    const twitterHandle = tweet.author_id; // Assuming you have a way to get the handle from the author_id
+    const authorId = tweet.author_id;
 
+    if (!authorId) {
+      console.log("No author_id in tweet, skipping.");
+      continue;
+    }
+
+    // Fetch the user's handle
+    const user = await twitterClient.v2.user(authorId, { 'user.fields': 'username' });
+    const twitterHandle = user.data?.username;
+    if (!twitterHandle) {
+      console.log("Couldn't retrieve twitter handle from author_id, skipping.");
+      continue;
+    }
+
+    console.log(tweetText);
     // Check if the tweet contains a SHA-256 address and the word "audit"
-    const sha256Regex = /\b[A-Fa-f0-9]{64}\b/;
+    const sha256Regex = /\b0x[a-fA-F0-9]{40}\b/;
     if (sha256Regex.test(tweetText) && tweetText.toLowerCase().includes('audit')) {
       const contractAddress = tweetText.match(sha256Regex)![0];
 
       if (!auditedContracts.has(contractAddress)) {
         console.log(`Auditing contract ${contractAddress} mentioned by @${twitterHandle}`);
 
+        // Try to fetch contract source code from supported platforms
+        const found = await scanChainsForSha256Address(contractAddress);
+        if (!found) {
+          // No supported chain found, reply accordingly
+          const unsupportedMessage = `Hi @${twitterHandle}!\n\nWe don't support the chain for this contract yet. Please audit it manually at https://certaik.xyz`;
+          console.log(unsupportedMessage);
+          await postAuditReply(unsupportedMessage, tweetId);
+          await delay(2000);
+          continue;
+        }
+
         // Perform Replicate model audit
-        const auditReport = await callReplicateModel(contractAddress);
+        const auditReport = await callReplicateModel(found.sourceCode);
 
         if (!auditReport) {
           console.error(`Failed to get audit report for contract ${contractAddress}, skipping.`);
           continue;
         }
 
-        // Summarize audit findings
-        const summary = await summarizeAudit(auditReport);
+        // Upload full report to Pastebin
+        const pastebinLink = await uploadToPastebin(auditReport, `Audit Report ${contractAddress}`);
 
         // Compose reply tweet message
-        const replyMessage = composeAuditReplyTweetMessage(twitterHandle, summary);
+        const replyMessage = composeAuditReplyTweetMessage(twitterHandle, pastebinLink);
 
         // Post reply tweet
         console.log(replyMessage);
@@ -160,161 +449,9 @@ export async function auditAndReplyToMentions() {
   }
 }
 
-// Function to call Replicate model
-async function callReplicateModel(contractSourceCode: string): Promise<string | undefined> {
-  try {
-   
-    const MAX_INPUT_LENGTH = 25000; // Adjust based on the model's limitations
-
-    let trimmedSourceCode = contractSourceCode;
-
-    if (contractSourceCode.length > MAX_INPUT_LENGTH) {
-      console.warn(`Contract source code exceeds maximum length (${MAX_INPUT_LENGTH} characters). Trimming the input.`);
-      // Optionally, you can truncate or summarize
-      trimmedSourceCode = contractSourceCode.slice(0, MAX_INPUT_LENGTH) + '\n// [Content truncated due to length]';
-    }
-
-    // Prepare the prompt
-    const prompt = `Analyze the following Solidity contract and provide an audit report highlighting any potential security vulnerabilities. List the findings categorized as Critical Severity Findings, High Severity Findings, Medium Severity Findings, or Low Severity Findings. Follow the format of the provided template exactly.\n\nContract:\n${trimmedSourceCode}\n\nAudit Report:`;
-
-    // Define the input for the model
-    const input = {
-      prompt: prompt,
-      max_new_tokens: 1024,
-      prompt_template: "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n{system_prompt}<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n{prompt}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n",
-    };
-
-    // console.log("Input:", input);
-
-    // Call the Replicate model
-    const output = await replicate.run("meta/meta-llama-3-70b-instruct", { input });
-
-    const outputString = Array.isArray(output) ? output.join("") : String(output);
-    return outputString;
-  } catch (error) {
-    console.error("Error calling Replicate model:", error);
-    return undefined;
-  }
-}
-
-// Function to summarize audit findings
-function summarizeAudit(auditReport: string): { critical: number; high: number; medium: number; low: number } {
-    // Define regex patterns for headings
-    const headingPatterns = [
-        { name: 'critical', regex: /^\s*(\*\*|\*)?\s*Critical Severity Findings?:?\s*(\*\*|\*)?\s*$/im },
-        { name: 'high', regex: /^\s*(\*\*|\*)?\s*High Severity Findings?:?\s*(\*\*|\*)?\s*$/im },
-        { name: 'medium', regex: /^\s*(\*\*|\*)?\s*Medium Severity Findings?:?\s*(\*\*|\*)?\s*$/im },
-        { name: 'low', regex: /^\s*(\*\*|\*)?\s*Low Severity Findings?:?\s*(\*\*|\*)?\s*$/im },
-        { name: 'recommendations', regex: /^\s*(\*\*|\*)?\s*Recommendations?:?\s*(\*\*|\*)?\s*$/im },
-    ];
-
-    // Locate heading positions
-    interface HeadingPosition {
-        name: string;
-        index: number;
-    }
-
-    const headingPositions: HeadingPosition[] = headingPatterns
-        .map(pattern => {
-            const match = auditReport.match(pattern.regex);
-            return match && match.index !== undefined ? { name: pattern.name, index: match.index } : null;
-        })
-        .filter((pos): pos is HeadingPosition => pos !== null);
-
-    // Sort headings by position in the text
-    headingPositions.sort((a, b) => a.index - b.index);
-
-    // Extract sections between headings
-    const sections: { [key: string]: string } = {};
-    for (let i = 0; i < headingPositions.length; i++) {
-        const currentHeading = headingPositions[i];
-        const nextHeadingIndex = i + 1 < headingPositions.length ? headingPositions[i + 1].index : auditReport.length;
-
-        const sectionContent = auditReport.slice(
-            currentHeading.index + auditReport.slice(currentHeading.index).match(headingPatterns.find(p => p.name === currentHeading.name)!.regex)![0].length,
-            nextHeadingIndex
-        );
-        sections[currentHeading.name] = sectionContent.trim();
-    }
-
-    // Helper to count findings in a section based on numbering
-    const countFindings = (section: string): number => {
-        const numberedItemsRegex = /^\s*\d+\.\s+/gm; // Match lines starting with a numbered item
-        return (section.match(numberedItemsRegex) || []).length;
-    };
-
-    // Count findings in each severity section
-    const critical = sections['critical'] ? countFindings(sections['critical']) : 0;
-    const high = sections['high'] ? countFindings(sections['high']) : 0;
-    const medium = sections['medium'] ? countFindings(sections['medium']) : 0;
-    const low = sections['low'] ? countFindings(sections['low']) : 0;
-
-    if (critical === 0 && high === 0 && medium === 0 && low === 0) {
-        // Return null
-        console.error('No findings detected in the audit report. Skipping this contract.');
-        process.exit(1);
-    }
-
-    return { critical, high, medium, low };
-}
-
-
-// Function to compose tweet message
-function composeTweetMessage(
-    twitterHandle: string,
-    coinName: string,
-    summary: { critical: number; high: number; medium: number; low: number }
-  ): string {
-    return `Hi @${twitterHandle}!
-  
-  You are trending right now on CoinGecko!📈
-  
-  We audited your contract to help you:
-  
-  🔴 Critical Severity Issues: ${summary.critical}
-  🟠 High Severity Issues: ${summary.high}
-  🟡 Medium Severity Issues: ${summary.medium}
-  🟢 Low Severity Issues: ${summary.low}
-  
-  For more details, visit https://certaik.xyz and audit your contract.
-  
-  #${coinName.replace(/\s+/g, '')} #Crypto #CertaiK #Audit`;
-}
-
-// Function to post tweet
-async function postTweet(message: string) {
-  try {
-    await twitterClient.v2.tweet(message);
-    console.log('Tweet posted successfully.');
-  } catch (error) {
-    console.error('Error posting tweet:', error);
-  }
-}
-
-// Function to compose tweet message
-function composeAuditReplyTweetMessage(
-  twitterHandle: string,
-  pastebinLink: string
-): string {
-  return `Hi @${twitterHandle}!
-
-  Here is the audit you requested:
-
-  ${pastebinLink}
-  
-  `;
-}
-
-async function postAuditReply(message: string, tweetId: number) {
-  try {
-    await twitterClient.v2.reply(message, { in_reply_to_tweet_id: tweetId });
-    console.log('Tweet reply posted successfully.');
-  } catch (error) {
-    console.error('Error posting tweet reply:', error);
-  }
-}
-
-// Function to introduce a delay
-function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+if (require.main === module) {
+  (async () => {
+    // await auditAndTweet();
+    // await auditAndReplyToMentions();
+  })().catch(console.error);
 }
