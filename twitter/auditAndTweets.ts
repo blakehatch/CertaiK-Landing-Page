@@ -140,11 +140,13 @@ async function callReplicateModel(contractSourceCode: string): Promise<string | 
     const text = trimmedSourceCode;
 
     // If a prompt string is provided, use it. Otherwise, read from the audit-prompt.md file.
-    const auditPromptResponse = trimmedSourceCode || await fs.readFile(path.join(process.cwd(), 'prompts', 'audit-prompt.md'), 'utf8');
+    const auditPromptResponse = await fs.readFile(path.join(process.cwd(), 'prompts', 'audit-prompt.md'), 'utf8');
 
     // Insert the contract code into the placeholder backticks in the prompt template
     const auditPrompt = auditPromptResponse.replace('```\n\n```', `\`\`\`\n${text}\n\`\`\``);
 
+
+    console.log(auditPrompt);
     // Now use `auditPrompt` as the prompt input for the model:
     const input = {
       prompt: auditPrompt,
