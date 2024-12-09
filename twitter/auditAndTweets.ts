@@ -146,7 +146,6 @@ async function callReplicateModel(contractSourceCode: string): Promise<string | 
     const auditPrompt = auditPromptResponse.replace('```\n\n```', `\`\`\`\n${text}\n\`\`\``);
 
 
-    console.log(auditPrompt);
     // Now use `auditPrompt` as the prompt input for the model:
     const input = {
       prompt: auditPrompt,
@@ -167,11 +166,11 @@ async function callReplicateModel(contractSourceCode: string): Promise<string | 
 // Summarize audit findings
 function summarizeAudit(auditReport: string): { critical: number; high: number; medium: number; low: number } | null {
   const headingPatterns = [
-    { name: 'critical', regex: /^\s*(\*\*|\*)?\s*Critical Severity Findings?:?\s*(\*\*|\*)?\s*$/im },
-    { name: 'high', regex: /^\s*(\*\*|\*)?\s*High Severity Findings?:?\s*(\*\*|\*)?\s*$/im },
-    { name: 'medium', regex: /^\s*(\*\*|\*)?\s*Medium Severity Findings?:?\s*(\*\*|\*)?\s*$/im },
-    { name: 'low', regex: /^\s*(\*\*|\*)?\s*Low Severity Findings?:?\s*(\*\*|\*)?\s*$/im },
-    { name: 'recommendations', regex: /^\s*(\*\*|\*)?\s*Recommendations?:?\s*(\*\*|\*)?\s*$/im },
+    { name: 'critical', regex: /^\s*#{1,6}\s*(🚨\s*)?Critical\s*$/im },
+    { name: 'high', regex: /^\s*#{1,6}\s*(🔴\s*)?High\s*$/im },
+    { name: 'medium', regex: /^\s*#{1,6}\s*(🟠\s*)?Medium\s*$/im },
+    { name: 'low', regex: /^\s*#{1,6}\s*(🟢\s*)?Low\s*$/im },
+    { name: 'informational', regex: /^\s*#{1,6}\s*(🔵\s*)?Informational\s*$/im },
   ];
 
   interface HeadingPosition {
