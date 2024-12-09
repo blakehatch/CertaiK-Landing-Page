@@ -39,6 +39,7 @@ const client = new PasteClient(process.env.PASTEBIN_API_KEY);
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY;
 const BSCSCAN_API_KEY = process.env.BSCSCAN_API_KEY;
 const POLYGONSCAN_API_KEY = process.env.POLYGONSCAN_API_KEY;
+const BASESCAN_API_KEY = process.env.BASESCAN_API_KEY;
 
 const auditedContractsFile = path.join(__dirname, 'auditedContracts.json');
 
@@ -68,7 +69,7 @@ async function fetchContractSourceCodeFromExplorer(platform: string, sha256Addre
       return null;
     }
 
-    const url = `https://api.${platform}.com/api`;
+    const url = `https://api.${platform}/api`;
     const params = new URLSearchParams({
       module: 'contract',
       action: 'getsourcecode',
@@ -94,12 +95,14 @@ async function fetchContractSourceCodeFromExplorer(platform: string, sha256Addre
 // Helper function to get the API key for a given platform
 function getApiKeyForPlatform(platform: string): string | undefined {
   switch (platform) {
-    case 'etherscan':
+    case 'etherscan.io':
       return ETHERSCAN_API_KEY;
-    case 'bscscan':
+    case 'bscscan.com':
       return BSCSCAN_API_KEY;
-    case 'polygonscan':
+    case 'polygonscan.com':
       return POLYGONSCAN_API_KEY;
+    case 'basescan.org':
+      return BASESCAN_API_KEY;
     default:
       return undefined;
   }
@@ -107,7 +110,7 @@ function getApiKeyForPlatform(platform: string): string | undefined {
 
 // Function to scan multiple chains for the given sha256 address and return the source code if found
 async function scanChainsForSha256Address(sha256Address: string): Promise<{platform: string; sourceCode: string} | null> {
-  const platforms = ['etherscan', 'bscscan', 'polygonscan']; 
+  const platforms = ['etherscan.io', 'basescan.org', 'bscscan.com', 'polygonscan.com']; 
   for (const platform of platforms) {
     const sourceCode = await fetchContractSourceCodeFromExplorer(platform, sha256Address);
     if (sourceCode) {
@@ -124,6 +127,8 @@ async function callReplicateModel(contractSourceCode: string): Promise<string | 
     const MAX_INPUT_LENGTH = 25000; // Adjust based on the model's limitations
 
     let trimmedSourceCode = contractSourceCode;
+
+    // console.log(contractSourceCode);
 
     if (contractSourceCode.length > MAX_INPUT_LENGTH) {
       console.warn(`Contract source code exceeds maximum length (${MAX_INPUT_LENGTH} characters). Trimming the input.`);
@@ -405,7 +410,7 @@ export async function auditAndReplyToMentions() {
     if (sha256Regex.test(tweetText) && tweetText.toLowerCase().includes('audit')) {
       const contractAddress = tweetText.match(sha256Regex)![0];
 
-      if (!auditedContracts.has(contractAddress)) {
+      if (!auditedContracts.has(`${contractAddress}-${twitterHandle}`)) {
         console.log(`Auditing contract ${contractAddress} mentioned by @${twitterHandle}`);
 
         // Try to fetch contract source code from supported platforms
@@ -437,8 +442,8 @@ export async function auditAndReplyToMentions() {
         console.log(replyMessage);
         await postAuditReply(replyMessage, tweetId);
 
-        // Save contract as audited
-        await saveAuditedContract(contractAddress);
+        // Save contract as audited with twitter handle
+        await saveAuditedContract(`${contractAddress}-${twitterHandle}`);
 
         // Add a delay to respect API rate limits
         await delay(2000);
