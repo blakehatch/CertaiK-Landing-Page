@@ -96,12 +96,16 @@ async function fetchContractSourceCodeFromExplorer(platform: string, sha256Addre
 function getApiKeyForPlatform(platform: string): string | undefined {
   switch (platform) {
     case 'etherscan.io':
+    case 'api-sepolia.etherscan.io':
       return ETHERSCAN_API_KEY;
     case 'bscscan.com':
+    case 'api-testnet.bscscan.com':
       return BSCSCAN_API_KEY;
     case 'polygonscan.com':
+    case 'api-amoy.polygonscan.com':
       return POLYGONSCAN_API_KEY;
     case 'basescan.org':
+    case 'api-sepolia.basescan.org':
       return BASESCAN_API_KEY;
     default:
       return undefined;
@@ -110,7 +114,7 @@ function getApiKeyForPlatform(platform: string): string | undefined {
 
 // Function to scan multiple chains for the given sha256 address and return the source code if found
 async function scanChainsForSha256Address(sha256Address: string): Promise<{platform: string; sourceCode: string} | null> {
-  const platforms = ['etherscan.io', 'basescan.org', 'bscscan.com', 'polygonscan.com']; 
+  const platforms = ['etherscan.io', 'basescan.org', 'bscscan.com', 'polygonscan.com', 'api-sepolia.etherscan.io', 'api-testnet.bscscan.com', 'api-amoy.polygonscan.com', 'api-sepolia.basescan.org'];
   for (const platform of platforms) {
     const sourceCode = await fetchContractSourceCodeFromExplorer(platform, sha256Address);
     if (sourceCode) {

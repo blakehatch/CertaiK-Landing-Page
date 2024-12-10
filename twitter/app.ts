@@ -58,7 +58,7 @@ async function runAuditAndTweetTask() {
 
 // Run tasks immediately upon startup
 runTasks();
-//runTrendingCoinsTask();
+runTrendingCoinsTask();
 runAuditAndTweetTask();
 
 // Schedule audit and tweet task to run every 10 minutes
