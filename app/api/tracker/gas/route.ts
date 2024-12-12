@@ -1,6 +1,4 @@
-import { NextApiRequest } from 'next';
-
-export async function GET(req: NextApiRequest) {
+export async function GET() {
   try {
     const etherscanApiKey = process.env.ETHERSCAN_API_KEY;
     const response = await fetch(`https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=${etherscanApiKey}`);

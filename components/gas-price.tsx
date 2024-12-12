@@ -23,12 +23,6 @@ const GasPriceBar: React.FC = () => {
     fetchGasPrice();
   }, []);
 
-  const getProgressValue = (price: number) => {
-    if (price < 50) return 33; // Cheap
-    if (price < 100) return 66; // Moderate
-    return 100; // Expensive
-  };
-
   return (
     <div className="gas-price-bar p-4 rounded text-white text-center">
       {gasPrice !== null ? (
