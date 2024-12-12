@@ -5,10 +5,10 @@ import { Textarea } from "@/components/ui/textarea";
 import AuditModal from "@/components/audit-modal";
 import AdvancedOptionsModal from "@/components/advanced-options";
 
-import { auditPromptText } from "@/components/prompt";
-import StolenMoneyTracker from "@/components/stolen-money";
+import { auditPromptText } from "@/components/gas-prompt";
+import GasPriceBar from "@/components/gas-price";
 
-export default function AuditPage() {
+export default function GasOptimizerPage() {
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [auditMarkdown, setAuditMarkdown] = useState<string | null>(null);
   const [isButtonDisabled, setIsButtonDisabled] = useState<boolean>(false);
@@ -39,7 +39,7 @@ export default function AuditPage() {
 
     console.log(cleanedFileContent);
 
-    const response = await fetch('/api/ai', {
+    const response = await fetch('/api/ai/gas', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -77,7 +77,7 @@ export default function AuditPage() {
 
       <div className="relative z-10 mt-32 px-4">
         <h1 className="text-5xl text-center mt-4 mb-10 text-white">
-           Smart Contract Auditor AI
+           Smart Contract Gas Optimizer AI
         </h1>
         <div className="flex flex-col items-center">
           <label className="mb-10 bg-gradient-to-r from-cyan-500 z-10 to-purple-500 text-white py-1 px-3 rounded cursor-pointer inline-block">
@@ -129,9 +129,7 @@ export default function AuditPage() {
               Advanced Options
             </button>
           </div>
-          <div className="mt-8">
-            <StolenMoneyTracker/>
-          </div>
+          <GasPriceBar/>
           {auditMarkdown && (
             <AuditModal 
               auditMarkdown={auditMarkdown} 
