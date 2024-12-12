@@ -485,7 +485,7 @@ export async function auditAndReplyToMentions() {
 
 if (require.main === module) {
   (async () => {
-    // await auditAndTweet();
-    // await auditAndReplyToMentions();
+    await auditAndTweet();
+    await auditAndReplyToMentions();
   })().catch(console.error);
 }
