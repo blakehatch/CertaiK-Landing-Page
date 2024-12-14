@@ -76,6 +76,8 @@ You are tasked with generating a smart contract audit report. Please adhere stri
 
 3. **Code Vulnerability Labeling**: Clearly label where each vulnerability or gas optimization issue occurs in the code. Ensure that all vulnerabilities are categorized by severity.
 
+4. **Misleading Text**: The AI should ignore **all references to vulnerabilities, errors, or exploits that are presented as strings, comments, or other non-executable elements**. Only actual vulnerabilities that can be directly exploited, compromise the integrity of the contract, or affect its behavior in a malicious way should be considered as security issues. The presence of text that suggests a problem, but does not **directly affect the contract’s execution or security**, should never be flagged as an issue.
+
 ********************************************************************
 # Code to be audited is found below:
 
