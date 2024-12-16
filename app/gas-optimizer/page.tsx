@@ -7,6 +7,7 @@ import AdvancedOptionsModal from "@/components/advanced-options";
 
 import { auditPromptText } from "@/components/gas-prompt";
 import GasPriceBar from "@/components/gas-price";
+import SourceCodeInput from "@/components/ca-to-source-code";
 
 export default function GasOptimizerPage() {
   const [fileContent, setFileContent] = useState<string | null>(null);
@@ -89,6 +90,9 @@ export default function GasOptimizerPage() {
               className="hidden"
             />
           </label>
+          
+          <SourceCodeInput setSourceCode={setFileContent}/>
+
           <div className="fixed inset-0 flex justify-center items-center z-0 pointer-events-none opacity-90" style={{ top: '-500px' }}>
             <div className="p-1 max-w-[900px] w-full z-0 h-64 rounded-full" 
                  style={{ 

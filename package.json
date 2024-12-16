@@ -13,6 +13,7 @@
     "@radix-ui/react-progress": "^1.1.0",
     "@react-three/drei": "^9.118.0",
     "@react-three/fiber": "^9.0.0-alpha.8",
+    "axios": "^1.7.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "fs": "^0.0.1-security",
