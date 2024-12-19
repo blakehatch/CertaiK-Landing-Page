@@ -8,6 +8,8 @@ import AdvancedOptionsModal from "@/components/advanced-options";
 import { auditPromptText } from "@/components/prompt";
 import StolenMoneyTracker from "@/components/stolen-money";
 import SourceCodeInput from "@/components/ca-to-source-code";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export default function AuditPage() {
   const [fileContent, setFileContent] = useState<string | null>(null);
@@ -38,8 +40,6 @@ export default function AuditPage() {
 
     const cleanedFileContent = removeComments(fileContent || '');
 
-    console.log(cleanedFileContent);
-
     const response = await fetch('/api/ai', {
       method: 'POST',
       headers: {
@@ -53,9 +53,6 @@ export default function AuditPage() {
       const responseData = await response.json();
 
       const auditReport = JSON.parse(responseData);
-
-      console.log(auditReport);
-
       setAuditMarkdown(auditReport);
       console.log('Audit request sent successfully');
     } else {
@@ -71,17 +68,17 @@ export default function AuditPage() {
   };
 
   return (
-    <main 
-      className="min-h-screen bg-black text-white overflow-hidden" 
-      style={{ backgroundImage: 'url(/bg-pattern.webp)', backgroundSize: 'cover' }}
-    >
-
-      <div className="relative z-10 mt-32 px-4">
+    <main className="min-h-screen bg-black text-white overflow-hidden">
+      <div className="relative mt-32 px-4 z-10">
         <h1 className="text-5xl text-center mt-4 mb-10 text-white">
            Smart Contract Auditor AI
         </h1>
         <div className="flex flex-col items-center">
-          <label className="mb-10 bg-gradient-to-r from-cyan-500 z-10 to-purple-500 text-white py-1 px-3 rounded cursor-pointer inline-block">
+          <label className={cn(
+            "flex items-center justify-center text-md py-2 px-5",
+            "mb-10 bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-md cursor-pointer",
+            "hover:opacity-80 transition-opacity",
+          )}>
             <span>Upload .sol or .rs file</span>
             <input
               type="file"
@@ -90,17 +87,7 @@ export default function AuditPage() {
               className="hidden"
             />
           </label>
-
           <SourceCodeInput setSourceCode={setFileContent}/>
-
-          <div className="fixed inset-0 flex justify-center items-center z-0 pointer-events-none opacity-90" style={{ top: '-500px' }}>
-            <div className="p-1 max-w-[900px] w-full z-0 h-64 rounded-full" 
-                 style={{ 
-                   background: 'radial-gradient(circle, rgba(255,0,0,0.4) 0%, rgba(0,0,255,0.4) 120%)', 
-                   filter: 'blur(60px) opacity(0.99)'  // Increased blur and adjusted opacity
-                 }}>
-            </div>
-          </div>
           <Textarea 
               placeholder="Paste Solidity or Rust code here..." 
               className="text-white bg-black z-10 h-48 max-w-[800px] w-full rounded mb-6"
@@ -111,8 +98,8 @@ export default function AuditPage() {
             Manually review results and provide feedback.
           </p>
           <div className="flex items-center z-10 space-x-3 mt-4">
-            <button 
-              className={`bg-gradient-to-r from-cyan-500 to-purple-500 text-white py-2 px-8 rounded text-md ${(isButtonDisabled || !fileContent) ? 'opacity-50 cursor-not-allowed' : ''}`}
+            <Button 
+              variant="bright"
               onClick={handleSubmitAudit}
               disabled={isButtonDisabled || !fileContent}
             >
@@ -125,13 +112,13 @@ export default function AuditPage() {
                   <span>Processing...</span>
                 </div>
               ) : 'Generate Audit'}
-            </button>
-            <button 
-              className="bg-gradient-to-r from-gray-500 to-gray-700 text-white py-2 px-5 rounded text-md"
+            </Button>
+            <Button 
               onClick={() => setShowAdvancedOptions(true)}
+              variant="dark"
             >
               Advanced Options
-            </button>
+            </Button>
           </div>
           <div className="mt-8">
             <StolenMoneyTracker/>
