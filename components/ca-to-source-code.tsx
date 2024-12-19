@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Input } from "@/components/ui/input"
+import { Button } from './ui/button';
 
 interface SourceCodeInputProps {
   setSourceCode: (sourceCode: string) => void;
@@ -12,6 +13,7 @@ const SourceCodeInput: React.FC<SourceCodeInputProps> = ({ setSourceCode }) => {
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setAddress(event.target.value);
+    setError(null);
   };
 
   const fetchSourceCode = async () => {
@@ -42,23 +44,23 @@ const SourceCodeInput: React.FC<SourceCodeInputProps> = ({ setSourceCode }) => {
   };
 
   return (
-    <div className="flex items-center space-x-2 w-[40%] mb-10">
-      <Input
-        type="text"
-        value={address}
-        onChange={handleInputChange}
-        placeholder="Enter contract address to fetch source code..."
-        className="shadcn-input-class text-lg w-full h-9" // Adjusted text size for readability and made input wider
-      />
-      <button 
-        className={`bg-gradient-to-r h-9 w-48 bg-gradient-to-r from-cyan-500 z-10 to-purple-500 text-white px-10 rounded text-md ${(loading || !address) ? 'opacity-50 cursor-not-allowed' : ''}`}
-        onClick={fetchSourceCode}
-        disabled={loading || !address}
-      >
-        {loading ? 'Loading...' : 'Scan'}
-      </button>
-      {error && <p className="text-red-500 text-lg">{error}</p>} {/* Adjusted text size for readability */}
-    </div>
+      <div className="flex items-center space-x-2 w-[40%] pb-8 relative mb-2">
+        <Input
+          type="text"
+          value={address}
+          onChange={handleInputChange}
+          placeholder="Enter contract address to fetch source code..."
+          className="text-lg w-full h-9"
+        />
+        <Button 
+          onClick={fetchSourceCode}
+          disabled={loading || !address}
+          variant='bright'
+        >
+          {loading ? 'Loading...' : 'Scan'}
+        </Button>
+        {error && <p className="text-red-500 text-lg absolute left-0 bottom-0">{error}</p>}
+      </div>
   );
 };
 

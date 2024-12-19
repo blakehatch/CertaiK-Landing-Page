@@ -11,3 +11,49 @@ body {
     --radius: 0.5rem;
   }
 }
+
+@layer components {
+  main {
+    position: relative;
+  }
+
+  main::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-position: center;
+    background-size: cover;
+    background-image: url('/bg-pattern.webp');
+  }
+
+  main::after {
+    content: "";
+    position: absolute;
+    top: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 900px;
+    height: 16rem;
+    background: radial-gradient(circle, rgba(255, 0, 0, 0.4) 0%, rgba(0, 0, 255, 0.4) 120%);
+    filter: blur(60px) opacity(0.8);
+    z-index: 0;
+  }
+}
+
+@layer components {
+  input,
+  textarea {
+    @apply bg-black rounded-md outline outline-1 outline-zinc-200 px-3 py-2 transition-colors focus-visible:outline-zinc-100/80 focus-visible:outline-2
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    @apply text-zinc-500
+  }
+
+  input::disabled,
+  textarea::disabled {
+    @apply cursor-not-allowed opacity-50
+  }
+}
