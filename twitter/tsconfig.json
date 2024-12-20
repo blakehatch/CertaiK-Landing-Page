@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2019", // or any other target version you prefer
+    "module": "commonjs",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "lib": ["esnext", "dom"], // Include 'dom' if you need DOM types as well
+    "typeRoots": ["./node_modules/@types"]
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules"]
+}
